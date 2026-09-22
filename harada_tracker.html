@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harada Method OW64 Strategic Matrix</title>
+    <style>
+        :root {
+            --bg-color: #e8f0ff;
+            --card-bg: #F7ACCF;
+            --border-color: #F7ACCF;
+            --text-main: #6a0f49;
+            --text-muted: #362645;
+            --accent-primary: #ff7ce7;
+            --accent-success: #de4abc;
+            --accent-glow: rgba(210, 66, 254, 0.15);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+        }
+
+        h1 {
+            margin: 0 0 8px 0;
+            font-size: 2rem;
+            color: var(--text-main);
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .matrix-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            max-height: 600px;
+        }
+
+        .matrix-cell {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .matrix-cell:not(.central-goal):hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 12px var(--accent-glow);
+            transform: translateY(-2px);
+        }
+
+        .matrix-cell.active {
+            border-color: var(--accent-primary);
+            background-color: rgba(177, 0, 121, 0.8);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .matrix-cell.central-goal {
+            background: linear-gradient(135deg, #c32689 0%, #ffa9f4 100%);
+            border: 2px solid var(--accent-primary);
+            cursor: default;
+            justify-content: center;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(2, 132, 199, 0.3);
+        }
+
+        .cell-number {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .central-goal .cell-number {
+            color: #bae6fd;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .cell-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            line-height: 1.4;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        .central-goal .cell-title {
+            font-size: 1.15rem;
+            justify-content: center;
+        }
+
+        .cell-progress-container {
+            width: 100%;
+            height: 4px;
+            background-color: var(--border-color);
+            border-radius: 2px;
+            margin-top: 12px;
+        }
+
+        .cell-progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--accent-success);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .task-panel {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 24px;
+            display: none;
+        }
+
+        .task-panel.visible {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+
+        .panel-title {
+            margin: 0;
+            font-size: 1.3rem;
+            color: var(--accent-primary);
+        }
+
+        .task-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .task-list {
+                grid-template-columns: 1fr;
+            }
+            .matrix-grid {
+                max-height: none;
+                aspect-ratio: auto;
+                grid-template-columns: 1fr;
+            }
+            .matrix-cell.central-goal {
+                grid-row: 1;
+            }
+        }
+
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            background-color: rgba(15, 23, 42, 0.4);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .task-item:hover {
+            background-color: rgba(56, 189, 248, 0.05);
+        }
+
+        .task-item input[type="checkbox"] {
+            margin-top: 3px;
+            cursor: pointer;
+            accent-color: var(--accent-success);
+        }
+
+        .task-text {
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .task-item.completed .task-text {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Harada Method OW64 Matrix</h1>
+        <p class="subtitle">Unified Strategic Dashboard &bull; Academic Year 2026–2027</p>
+    </header>
+
+    <div class="matrix-grid" id="matrixGrid">
+        <div class="matrix-cell" data-pillar="1">
+            <div>
+                <div class="cell-number">Pillar 1</div>
+                <div class="cell-title">Physical Engine (Origin Base)</div>
+            </div>
+            <div class="cell-progress-container"><div class="cell-progress-bar" id="pb-1"></div></div>
+        </div>
+
+        <div class="matrix-cell" data-pillar="2">
+            <div>
+                <div class="cell-number">Pillar 2</div>
+                <div class="cell-title">Rowing Technique &amp; Sequence</div>
+            </div>
+            <div class="cell-progress-container"><div class="cell-progress-bar" id="pb-2"></div></div>
+        </div>
+
+        <div class="matrix-cell" data-pillar="3">
+            <div>
+                <div class="cell-number">Pillar 3</div>
+                <div class="cell-title">Concept2 Testing Logic</div>
+            </div>
+            <div class="cell-progress-container"><div class="cell-progress-bar" id="pb-3"></div></div>
+        </div>
+
+        <div class="matrix-cell" data-pillar="4">
+            <div>
+                <div class="cell-number">Pillar 4</div>
+                <div class="cell-title">Hybrid PhD SOP &amp; Coding Portfolio</div>
+            </div>
+            <div class="cell-progress-container"><div class="cell-progress-bar" id="pb-4"></div></div>
+        </div>
+
+        <div class="matrix-cell central-goal">
+            <div class="cell-number">Ultimate Focus</div>
+            <div class="cell-title">Sub-7:30 2K Erg Test &amp; Boston PhD Admission</div>
+        </div>
+
+        <div class="matrix-cell" data-pillar="5">
+            <div>
+                <div class="cell-number">Pillar 5</div>
+                <div class="cell-title">Mental Resilience &amp; Vision</div>
+            </div>
+            <div class="cell-progress-container"><div class="cell-progress-bar" id="pb-5"></div></div>
+        </div>
+
+        <div class="matrix-cell" data-pillar="6">
+            <div>
+                <div class="cell-number">Pillar 6</div>
+                <div class="cell-title">NCAA &amp; Coach Outreach</div>
+            </div>
+            <div class="cell-progress-container"><div class="cell-progress-bar" id="pb-6"></div></div>
+        </div>
+
+        <div class="matrix-cell" data-pillar="7">
+            <div>
+                <div class="cell-number">Pillar 7</div>
+                <div class="cell-title">Collagen Diss. (Acid Degradation)</div>
+            </div>
+            <div class="cell-progress-container"><div class="cell-progress-bar" id="pb-7"></div></div>
+        </div>
+
+        <div class="matrix-cell" data-pillar="8">
+            <div>
+                <div class="cell-number">Pillar 8</div>
+                <div class="cell-title">Website Architecture &amp; Business MVP</div>
+            </div>
+            <div class="cell-progress-container"><div class="cell-progress-bar" id="pb-8"></div></div>
+        </div>
+    </div>
+
+    <div class="task-panel" id="taskPanel">
+        <div class="panel-header">
+            <h3 class="panel-title" id="panelTitle">Select a pillar above to view tasks</h3>
+            <span class="subtitle" id="panelProgress">0/8 Completed</span>
+        </div>
+        <div class="task-list" id="taskList"></div>
+    </div>
+</div>
+<script>
+    const haradaData = {
+        1: {
+            title: "Physical Engine (Origin Erg Base)",
+            tasks: [
+                "Row 3x a week on the Origin machine without exception.",
+                "Cap low-intensity steady-state strictly between 18–20 s/m.",
+                "Log one continuous 30-minute piece every week to build capillary density.",
+                "Execute rate step-up intervals once every two weeks to train fast-twitch fibers.",
+                "Complete 20 minutes of zone-2 cross-training on non-rowing days.",
+                "Track weekly total training volume in a dedicated diary.",
+                "Maintain active resting heart rate logs to monitor cardiovascular adaptation.",
+                "Never skip the final 500m pacing shifts during interval blocks."
+            ]
+        },
+        2: {
+            title: "Rowing Technique (Biomechanical Execution)",
+            tasks: [
+                "Spend the first 5 minutes of every session executing the Pick Drill.",
+                "Keep the Origin machine's resistance lever strictly at a medium setting (4 or 5 out of 10).",
+                "Focus on a 1:2 drive-to-recovery time ratio (1s explosive drive, 2s glide).",
+                "Film one side-profile video of your stroke each week to self-correct posture.",
+                "Practice driving exclusively from the heels without pulling early with your arms.",
+                "Maintain completely flat wrists through the finish phase of the pull.",
+                "Keep shoulders relaxed and low at the catch to maximize reach length.",
+                "Ensure hands clear the knees on the recovery before the knees begin to bend."
+            ]
+        },
+        3: {
+            title: "Concept2 Testing Logic",
+            tasks: [
+                "Book the local gym day pass precisely every 6 weeks for verification.",
+                "Set the C2 monitor explicitly to 'Drag Factor' display and calibrate to 115–120.",
+                "Practice a 10-stroke starting sequence (3 short, 7 lengthening strokes) during warm-ups.",
+                "Target a perfectly flat 1:52.5/500m split ceiling for the first 1,500 meters of the 2k test.",
+                "Force the testing stroke rate to settle cleanly between 28–30 s/m.",
+                "Save a digital photo of every Concept2 PM5 monitor memory screen for your portfolio.",
+                "Execute an isolated 500m test piece on week 6 to determine your absolute raw speed.",
+                "Run a 10-stroke maximum-wattage test to verify your peak leg power output."
+            ]
+        },
+        4: {
+            title: "Hybrid PhD SOP & Coding Portfolio",
+            tasks: [
+                "Draft a public GitHub repository dedicated entirely to your personal Python data pipelines.",
+                "Format all Python scripts with clean notation so admissions committees can read them easily.",
+                "Identify exactly 3 faculty members at BU, MIT, and Harvard using hybrid wet/dry models.",
+                "Explicitly write the words 'wet/dry hybrid scientist' into the first paragraph of your SOP.",
+                "Read 1 recent publication from each target lab to mention organically in your application.",
+                "Dedicate 30 minutes every morning to academic writing before any physical training.",
+                "Align your letters of recommendation to highlight your independent project management skills.",
+                "Finalize your CV layout to feature both your Biochemistry degree and your GitHub link at the top."
+            ]
+        },
+        5: {
+            title: "Mental Resilience & Vision",
+            tasks: [
+                "Spend 2 minutes sitting quietly on the erg before starting, visualizing a steady 1:52 split.",
+                "Adopt a personal driving phrase (e.g., 'Levers down, brain decides') to repeat when splits get tough.",
+                "Program yourself to look only at the central display monitor, never letting your eyes wander.",
+                "Review your past lacrosse achievements every Sunday to reinforce your competitive identity.",
+                "Practice deep diaphragmatic breathing cycles during the 2-minute rest periods of intervals.",
+                "Anticipate the 'third 500m wall' of the 2k and write down a countermeasure strategy for it.",
+                "Keep your training space completely clear of clutter to maintain psychological focus.",
+                "Celebrate every single micro-milestone (like dropping a steady-state rate effortlessly)."
+            ]
+        },
+        6: {
+            title: "NCAA & Coach Outreach",
+            tasks: [
+                "Complete the official Varsity Lightweight Rowing recruiting questionnaires for BU, MIT, and Harvard.",
+                "Send introductory emails to the assistant coaches before October 1st outlining your PhD timelines.",
+                "Request a formal athletic character reference letter from your university lacrosse coach in England.",
+                "Register directly with the NCAA Eligibility Center to get your official ID number.",
+                "Order your official academic transcripts from your UK institution to be sent to the US portals early.",
+                "Update the rowing coaches via email every 6 weeks with your verified Concept2 data sheets.",
+                "Explicitly ask the coaches about their roster policy regarding novice graduate walk-ons.",
+                "Track all coach communication dates and notes in a central spreadsheet."
+            ]
+        },
+        7: {
+            title: "Collagen Dissertation (Acid Degradation Assays)",
+            tasks: [
+                "Run a standard 4-point pH gradient test to establish degradation kinetics thresholds.",
+                "Track hydroxyproline release metrics continuously across all ongoing incubation time blocks.",
+                "Use densitometry analysis software to quantify the structural breakdown of collagen band structures.",
+                "Build a custom Python parsing script to automatically clean and organize raw spectrophotometer data.",
+                "Link your dissertation analysis scripts directly to your public portfolio GitHub repository.",
+                "Map out 3 explicit milestone dates for completing the writing of your literature review draft.",
+                "Format all figures and kinetic charts to publication-quality standards before November.",
+                "Dedicate 1 isolated evening block per week solely to organizing lab notebook data entries."
+            ]
+        },
+        8: {
+            title: "Website Architecture & Business MVP",
+            tasks: [
+                "Code the baseline core architecture of your web business using a lightweight Python framework.",
+                "Dedicate Saturday morning blocks strictly to building out customer-facing front-end pages.",
+                "Set up an automated cloud pipeline to host your code securely and test adjustments quickly.",
+                "Write 3 foundational content articles or service outlines mapping out your business offer.",
+                "Run a weekly system diagnostic check every Friday night to ensure data flows correctly.",
+                "Limit active web design tasks to a maximum of 4 hours per week to prevent dissertation burnout.",
+                "Structure your site's codebase to double as a functional showcase for your PhD application portfolio.",
+                "Set a strict target date to launch your bare-bones functional landing page to the public."
+            ]
+        }
+    };
+    const storageKey = 'harada_tracker_state';
+    let userProgress = JSON.parse(localStorage.getItem(storageKey)) || {};
+    let activePillar = null;
+
+    const cells = document.querySelectorAll('.matrix-cell[data-pillar]');
+    const taskPanel = document.getElementById('taskPanel');
+    const panelTitle = document.getElementById('panelTitle');
+    const panelProgress = document.getElementById('panelProgress');
+    const taskList = document.getElementById('taskList');
+
+    function updateProgressBars() {
+        for (let pId in haradaData) {
+            const totalTasks = haradaData[pId].tasks.length;
+            let completedCount = 0;
+            for (let i = 0; i < totalTasks; i++) {
+                if (userProgress[`${pId}-${i}`]) completedCount++;
+            }
+            const percentage = (completedCount / totalTasks) * 100;
+            const bar = document.getElementById(`pb-${pId}`);
+            if (bar) bar.style.width = `${percentage}%`;
+        }
+    }
+
+    function showPillarTasks(pillarId) {
+        activePillar = pillarId;
+        cells.forEach(c => c.classList.remove('active'));
+        const activeCell = document.querySelector(`.matrix-cell[data-pillar="${pillarId}"]`);
+        if (activeCell) activeCell.classList.add('active');
+
+        const pillarInfo = haradaData[pillarId];
+        panelTitle.textContent = pillarInfo.title;
+        taskPanel.classList.add('visible');
+
+        taskList.innerHTML = '';
+        let completedCount = 0;
+
+        pillarInfo.tasks.forEach((taskText, index) => {
+            const isCompleted = !!userProgress[`${pillarId}-${index}`];
+            if (isCompleted) completedCount++;
+
+            const taskItem = document.createElement('div');
+            taskItem.className = `task-item ${isCompleted ? 'completed' : ''}`;
+            taskItem.innerHTML = `
+                <input type="checkbox" id="check-${pillarId}-${index}" ${isCompleted ? 'checked' : ''}>
+                <span class="task-text">${taskText}</span>
+            `;
+
+            taskItem.addEventListener('click', (e) => {
+                if (e.target.tagName !== 'INPUT') {
+                    const checkbox = taskItem.querySelector('input');
+                    checkbox.checked = !checkbox.checked;
+                    toggleTask(pillarId, index, checkbox.checked, taskItem);
+                } else {
+                    toggleTask(pillarId, index, e.target.checked, taskItem);
+                }
+            });
+
+            taskList.appendChild(taskItem);
+        });
+
+        panelProgress.textContent = `${completedCount}/8 Completed`;
+    }
+
+    function toggleTask(pillarId, index, isChecked, element) {
+        const key = `${pillarId}-${index}`;
+        if (isChecked) {
+            userProgress[key] = true;
+            element.classList.add('completed');
+        } else {
+            delete userProgress[key];
+            element.classList.remove('completed');
+        }
+        localStorage.setItem(storageKey, JSON.stringify(userProgress));
+        updateProgressBars();
+
+        let completedCount = 0;
+        haradaData[pillarId].tasks.forEach((_, idx) => {
+            if (userProgress[`${pillarId}-${idx}`]) completedCount++;
+        });
+        panelProgress.textContent = `${completedCount}/8 Completed`;
+    }
+
+    cells.forEach(cell => {
+        cell.addEventListener('click', () => {
+            const pId = cell.getAttribute('data-pillar');
+            showPillarTasks(parseInt(pId));
+        });
+    });
+
+    updateProgressBars();
+</script>
+</body>
+</html>
+
